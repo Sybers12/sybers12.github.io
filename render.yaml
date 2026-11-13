@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: nbts-bloodbank
+    runtime: python
+    plan: free
+    rootDir: bloodbank
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 run.py
+    envVars:
+      - key: BB_HOST
+        value: 0.0.0.0
+      - key: PYTHON_VERSION
+        value: "3.12"

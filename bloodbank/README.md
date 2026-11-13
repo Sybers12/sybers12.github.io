@@ -54,6 +54,25 @@ All demo users use password **`demo123`**:
 `head_lab`, `phlebotomist`, `lab_tech`, `data_clerk`, `council`
 (the council user only sees approved results for *Ilala* council).
 
+## Deploy online (free, Render)
+
+The repo includes `render.yaml` at the root, so the Blood Bank can run as a live
+website with a public URL:
+
+1. Push the code to GitHub (already done) and go to
+   [dashboard.render.com](https://dashboard.render.com) → **New + → Web Service**
+2. Connect your GitHub account and pick the `Sybers12/sybers12.github.io` repo
+   — Render reads `render.yaml` and fills in the settings automatically
+3. Click **Apply** / **Create Web Service** and wait for the build
+4. Your app gets a public URL like `https://nbts-bloodbank.onrender.com` —
+   open it and sign in with a demo account
+
+Notes:
+- The free tier uses an ephemeral disk: demo data resets on each redeploy
+  (the app re-seeds automatically). Use a paid plan or an external database
+  for permanent storage.
+- On first load the free service may sleep and take ~30s to wake up.
+
 ## Notes
 
 - SMS sending is **simulated**: messages are logged to the database
