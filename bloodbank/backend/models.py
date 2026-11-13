@@ -8,9 +8,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 
 ROLES = [
-    "MANAGER", "QUALITY", "RECRUITER", "HEAD_DONATION", "COUNSELOR",
-    "HEAD_LAB", "PHLEBOTOMIST", "LAB_TECH", "DATA_CLERK", "COUNCIL",
+    "ADMIN", "MANAGER", "QUALITY", "RECRUITER", "HEAD_DONATION", "COUNSELOR",
+    "HEAD_LAB", "PHLEBOTOMIST", "LAB_TECH", "DATA_CLERK", "COUNCIL", "HOSPITAL",
 ]
+
+REGISTER_CATEGORIES = ["ADMIN", "MANAGER", "QUALITY", "HOSPITAL"]
 
 PRODUCT_TYPES = ["PRC", "FFP", "PLT", "CRYO"]
 RESULT_VALUES = ["NEGATIVE", "POSITIVE"]
@@ -48,6 +50,10 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(128), default="")
     role: Mapped[str] = mapped_column(String(32), index=True)
     council: Mapped[str] = mapped_column(String(64), default="")
+    location: Mapped[str] = mapped_column(String(96), default="")
+    hospital_id: Mapped[int | None] = mapped_column(ForeignKey("hospitals.id"), nullable=True)
+
+    hospital: Mapped["Hospital | None"] = relationship()
 
 
 class Token(Base):

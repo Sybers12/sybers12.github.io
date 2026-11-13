@@ -9,9 +9,12 @@ const NAV_ITEMS = [
   { key: "lab",        label: "Laboratory",     perm: "lab" },
   { key: "products",   label: "Blood Products", perm: "products" },
   { key: "council",    label: "Council",        perm: "council" },
+  { key: "hospital_portal", label: "Hospital Portal", perm: "hospital_portal" },
 ];
 
 const ROLE_PERMS = {
+  ADMIN:         ["stats", "donors", "donations", "recruiting", "lab", "products", "council", "hospital_portal"],
+  HOSPITAL:      ["stats", "hospital_portal"],
   MANAGER:       ["stats", "donors", "donations", "recruiting", "lab", "products"],
   QUALITY:       ["stats", "lab", "products"],
   RECRUITER:     ["stats", "recruiting"],
@@ -24,7 +27,7 @@ const ROLE_PERMS = {
   COUNCIL:       ["council"],
 };
 
-const APPROVERS = new Set(["HEAD_LAB", "QUALITY", "MANAGER"]);
+const APPROVERS = new Set(["HEAD_LAB", "QUALITY", "MANAGER", "ADMIN"]);
 const PRODUCT_TYPES = ["PRC", "FFP", "PLT", "CRYO"];
 const ABOD_GROUPS = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
 
@@ -110,6 +113,42 @@ async function doLogin(e) {
   }
 }
 
+async function doRegister(e) {
+  e.preventDefault();
+  const errEl = document.getElementById("regError");
+  errEl.classList.add("hidden");
+  try {
+    const data = await api("/register", {
+      method: "POST",
+      body: JSON.stringify({
+        full_name: document.getElementById("regName").value.trim(),
+        username: document.getElementById("regUser").value.trim(),
+        password: document.getElementById("regPass").value,
+        category: document.getElementById("regCategory").value,
+        location: document.getElementById("regLocation").value.trim(),
+        hospital_name: document.getElementById("regHospital").value.trim(),
+      }),
+    });
+    token = data.token;
+    localStorage.setItem("bb_token", token);
+    user = { role: data.role, full_name: data.full_name, council: data.council };
+    enterApp();
+    toast("Welcome, " + data.full_name + "! Account created as " + data.role);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove("hidden");
+  }
+}
+
+function showRegister(show) {
+  document.getElementById("loginForm").classList.toggle("hidden", show);
+  document.getElementById("linkRegister").parentElement.classList.toggle("hidden", show);
+  document.getElementById("registerForm").classList.toggle("hidden", !show);
+  document.getElementById("backToLogin").classList.toggle("hidden", !show);
+  document.getElementById("loginError").classList.add("hidden");
+  document.getElementById("regError").classList.add("hidden");
+}
+
 async function doLogout() {
   try { await api("/logout", { method: "POST" }); } catch { /* ignore */ }
   localStorage.removeItem("bb_token");
@@ -158,7 +197,7 @@ function showSection(key) {
   const views = {
     dashboard: viewDashboard, donors: viewDonors, donations: viewDonations,
     recruiting: viewRecruiting, lab: viewLab, products: viewProducts,
-    council: viewCouncil,
+    council: viewCouncil, hospital_portal: viewHospitalPortal,
   };
   (views[key] || viewDashboard)(content).catch(err => {
     content.innerHTML = `<div class="card"><p class="empty">${esc(err.message)}</p></div>`;
@@ -831,9 +870,49 @@ async function viewCouncil(el) {
     </div>`;
 }
 
+/* ---------------- hospital portal ---------------- */
+
+async function viewHospitalPortal(el) {
+  const data = await api("/hospital/portal");
+  const h = data.hospital;
+  const byType = Object.entries(data.summary.by_type || {})
+    .map(([t, n]) => ({ label: t, value: n }));
+  el.innerHTML = `
+    <h2 class="section">Hospital Portal — ${esc(h.name)}</h2>
+    <p class="section-sub">Location: ${esc(h.region || "—")} · Blood products issued to your hospital</p>
+    <div class="grid-3">
+      <div class="card stat-card"><div class="num">${data.summary.total || 0}</div><div class="lbl">Products received</div></div>
+      ${byType.map(t => `
+        <div class="card stat-card"><div class="num">${t.value}</div><div class="lbl">${esc(t.label)} units</div></div>`).join("")}
+    </div>
+    <div class="card table-scroll">
+      ${data.products.length ? `
+        <table><thead><tr>
+          <th>Code</th><th>Type</th><th>Donation</th><th>ABOD</th><th>Expiry</th><th>Status</th><th>Issued at</th>
+        </tr></thead><tbody>
+        ${data.products.map(p => `
+          <tr>
+            <td><b>${esc(p.product_code)}</b></td>
+            <td>${esc(p.product_type)}</td>
+            <td>${esc(p.donation_no)}</td>
+            <td>${bgroup(p.abod)}</td>
+            <td>${esc(p.expiry_date || "—")}</td>
+            <td>${badge(p.status)}</td>
+            <td class="muted">${esc(p.issued_at || "—")}</td>
+          </tr>`).join("")}
+        </tbody></table>` : '<p class="empty">No products issued to your hospital yet</p>'}
+    </div>`;
+}
+
 /* ---------------- init ---------------- */
 
 document.getElementById("loginForm").addEventListener("submit", doLogin);
+document.getElementById("registerForm").addEventListener("submit", doRegister);
+document.getElementById("linkRegister").addEventListener("click", e => { e.preventDefault(); showRegister(true); });
+document.getElementById("linkLogin").addEventListener("click", e => { e.preventDefault(); showRegister(false); });
+document.getElementById("regCategory").addEventListener("change", e => {
+  document.getElementById("regHospitalWrap").classList.toggle("hidden", e.target.value !== "HOSPITAL");
+});
 document.getElementById("btnLogout").addEventListener("click", doLogout);
 
 restoreSession().then(ok => {

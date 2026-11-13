@@ -17,12 +17,18 @@ The interface is in English.
 | **Laboratory** | lab tech, head of lab, quality, manager | Enter ABOD & TTI results linked to the donation number (machine ref), review, approve (head of lab / quality / manager), edit results & discrepancies, filter results by donation-no range (e.g. 23000–25000), blood group, TTI status; download PDF reports |
 | **Blood Products** | lab tech, head of lab, manager | Sort blood into PRC, FFP, Platelets (PLT), Cryoprecipitate (CRYO); label products (quarantine → ready); issue to hospitals (blocked for reactive/unapproved blood) |
 | **Council** | council users | View **approved** results only, filtered to their own council |
+| **Hospital Portal** | hospital users | View blood products issued to their hospital, with location |
 
 ## Roles
 
-`MANAGER`, `QUALITY`, `RECRUITER`, `HEAD_DONATION`, `COUNSELOR`, `HEAD_LAB`,
-`PHLEBOTOMIST`, `LAB_TECH`, `DATA_CLERK`, `COUNCIL` — see
-`backend/routers/auth.py` for the exact permission map.
+`ADMIN`, `MANAGER`, `QUALITY` (quality control manager), `HOSPITAL`, `RECRUITER`,
+`HEAD_DONATION`, `COUNSELOR`, `HEAD_LAB`, `PHLEBOTOMIST`, `LAB_TECH`,
+`DATA_CLERK`, `COUNCIL` — see `backend/routers/auth.py` for the exact permission map.
+
+New users can self-register on the login page (**Create an account**) choosing a
+category — Admin, Manager, Quality Control Manager or Hospital — plus their
+geographical location. Hospital accounts additionally register the hospital name
+and get a portal showing products issued to them.
 
 ## Run locally (Linux)
 
@@ -44,7 +50,7 @@ Open **http://127.0.0.1:8500** in your browser.
 
 All demo users use password **`demo123`**:
 
-`manager`, `quality`, `recruiter`, `head_donation`, `counselor`,
+`admin`, `manager`, `quality`, `recruiter`, `head_donation`, `counselor`,
 `head_lab`, `phlebotomist`, `lab_tech`, `data_clerk`, `council`
 (the council user only sees approved results for *Ilala* council).
 

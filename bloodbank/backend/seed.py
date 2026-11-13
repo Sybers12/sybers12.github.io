@@ -20,6 +20,7 @@ def seed():
             return
 
         users = [
+            ("admin", "ADMIN", "System Administrator", ""),
             ("manager", "MANAGER", "Anna Mwakalinga", ""),
             ("quality", "QUALITY", "Joseph Mrema", ""),
             ("recruiter", "RECRUITER", "Fatuma Ally", ""),
