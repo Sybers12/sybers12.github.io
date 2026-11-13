@@ -140,7 +140,7 @@ def _next_no(db, model, column, prefix) -> str:
 def login(body: LoginIn, db: Session = Depends(get_db)):
     user = db.query(User).filter_by(username=body.username).one_or_none()
     if user is None or not verify_password(body.password, user.password):
-        raise HTTPException(401, "Jina au neno la siri si sahihi / Invalid credentials")
+        raise HTTPException(401, "Invalid credentials")
     token = secrets.token_hex(16)
     db.add(Token(token=token, user_id=user.id))
     db.commit()
@@ -191,7 +191,7 @@ def donor_detail(donor_id: int, user=Depends(get_current_user), db: Session = De
     ensure_permission(user, "donors")
     donor = db.query(Donor).get((donor_id,))
     if donor is None:
-        raise HTTPException(404, "Mchangiaji hakupatikana / Donor not found")
+        raise HTTPException(404, "Donor not found")
     donations = (
         db.query(Donation).filter_by(donor_id=donor.id)
         .order_by(Donation.donation_date.desc()).all()
@@ -221,9 +221,9 @@ def create_donation(body: DonationIn, user=Depends(get_current_user), db: Sessio
     ensure_permission(user, "donations")
     donor = db.query(Donor).get((body.donor_id,))
     if donor is None:
-        raise HTTPException(404, "Mchangiaji hakupatikana / Donor not found")
+        raise HTTPException(404, "Donor not found")
     if donor.eligible_after and donor.eligible_after > today_str():
-        raise HTTPException(400, f"Mchangiaji bado hajaruhusiwa hadi {donor.eligible_after} / Donor not eligible yet")
+        raise HTTPException(400, f"Donor not eligible until {donor.eligible_after}")
     donation = Donation(
         donation_no=_next_no(db, Donation, Donation.donation_no, "DON"),
         donor_id=donor.id, venue=body.venue, district=body.district or donor.district,
@@ -271,7 +271,7 @@ def complete_visit(visit_id: int, actual_donors: int = 0,
     ensure_permission(user, "recruiting")
     visit = db.query(SiteVisit).get((visit_id,))
     if visit is None:
-        raise HTTPException(404, "Ziara haipatikani / Visit not found")
+        raise HTTPException(404, "Visit not found")
     visit.actual_donors = actual_donors
     visit.status = "DONE"
     db.commit()
@@ -347,17 +347,17 @@ def lab_pending(user=Depends(get_current_user), db: Session = Depends(get_db)):
 def enter_result(body: ResultIn, user=Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_permission(user, "lab")
     if body.abod not in ABOD_GROUPS:
-        raise HTTPException(400, "Kundi la damu si sahihi / Invalid blood group")
+        raise HTTPException(400, "Invalid blood group")
     for field in ("hiv", "hbv", "hcv", "syphilis"):
         value = getattr(body, field).upper()
         if value not in RESULT_VALUES:
             raise HTTPException(400, f"{field.upper()} value must be NEGATIVE or POSITIVE")
     donation = db.query(Donation).get((body.donation_id,))
     if donation is None:
-        raise HTTPException(404, "Michango haipatikani / Donation not found")
+        raise HTTPException(404, "Donation not found")
     existing = db.query(TestResult).filter_by(donation_id=donation.id).one_or_none()
     if existing:
-        raise HTTPException(400, "Majibu yamewekwa tayari / Result already entered")
+        raise HTTPException(400, "Result already entered")
     result = TestResult(
         donation_id=donation.id, abod=body.abod,
         hiv=body.hiv.upper(), hbv=body.hbv.upper(),
@@ -379,9 +379,9 @@ def edit_result(result_id: int, body: ResultIn, user=Depends(get_current_user),
     ensure_permission(user, "lab")
     result = db.query(TestResult).get((result_id,))
     if result is None:
-        raise HTTPException(404, "Majibu hayapatikani / Result not found")
+        raise HTTPException(404, "Result not found")
     if result.status == "APPROVED" and user.role not in APPROVERS:
-        raise HTTPException(403, "Majibu yaliyoidhinishwa yanahitaji idhini / Approved results need approver rights")
+        raise HTTPException(403, "Approved results need approver rights")
     result.abod = body.abod
     result.hiv = body.hiv.upper()
     result.hbv = body.hbv.upper()
@@ -403,12 +403,12 @@ def edit_result(result_id: int, body: ResultIn, user=Depends(get_current_user),
 def approve_result(result_id: int, user=Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_permission(user, "lab")
     if user.role not in APPROVERS:
-        raise HTTPException(403, "Ni mhudumu tu anayeidhinisha / Only approvers can approve")
+        raise HTTPException(403, "Only approvers can approve")
     result = db.query(TestResult).get((result_id,))
     if result is None:
-        raise HTTPException(404, "Majibu hayapatikani / Result not found")
+        raise HTTPException(404, "Result not found")
     if result.status == "DISCREPANCY":
-        raise HTTPException(400, "Tatua tofauti kwanza / Resolve discrepancy first")
+        raise HTTPException(400, "Resolve discrepancy first")
     result.status = "APPROVED"
     result.approved_by = user.full_name
     result.approved_at = now_iso()
@@ -447,10 +447,10 @@ def sort_products(body: ProductSortIn, user=Depends(get_current_user), db: Sessi
     ensure_permission(user, "products")
     for t in body.types:
         if t not in PRODUCT_TYPES:
-            raise HTTPException(400, f"Aina ya bidhaa si sahihi / Unknown product type {t}")
+            raise HTTPException(400, f"Unknown product type {t}")
     donation = db.query(Donation).get((body.donation_id,))
     if donation is None:
-        raise HTTPException(404, "Michango haipatikani / Donation not found")
+        raise HTTPException(404, "Donation not found")
     created = []
     for t in body.types:
         seq = db.query(BloodProduct).filter_by(donation_id=donation.id, product_type=t).count()
@@ -484,9 +484,9 @@ def label_product(product_id: int, user=Depends(get_current_user), db: Session =
     ensure_permission(user, "products")
     product = db.query(BloodProduct).get((product_id,))
     if product is None:
-        raise HTTPException(404, "Bidhaa haipatikani / Product not found")
+        raise HTTPException(404, "Product not found")
     if product.status != "QUARANTINE":
-        raise HTTPException(400, "Bidhaa imekwisha lebeliwa / Product already labeled")
+        raise HTTPException(400, "Product already labeled")
     product.status = "READY"
     product.labeled_by = user.full_name
     product.labeled_at = now_iso()
@@ -500,17 +500,17 @@ def issue_product(product_id: int, body: IssueIn, user=Depends(get_current_user)
     ensure_permission(user, "products")
     product = db.query(BloodProduct).get((product_id,))
     if product is None:
-        raise HTTPException(404, "Bidhaa haipatikani / Product not found")
+        raise HTTPException(404, "Product not found")
     if product.status != "READY":
-        raise HTTPException(400, "Lebeliwa kwanza kabla ya kutuma / Label before issuing")
+        raise HTTPException(400, "Label before issuing")
     result = product.donation.result if product.donation else None
     if result is None or result.status != "APPROVED":
-        raise HTTPException(400, "Majibu hayajaidhinishwa / Results not approved")
+        raise HTTPException(400, "Results not approved")
     if any(getattr(result, f) == "POSITIVE" for f in ("hiv", "hbv", "hcv", "syphilis")):
-        raise HTTPException(400, "Damu haitakiwi / Blood is reactive — cannot issue")
+        raise HTTPException(400, "Blood is reactive — cannot issue")
     hospital = db.query(Hospital).get((body.hospital_id,))
     if hospital is None:
-        raise HTTPException(404, "Hospitali haipatikani / Hospital not found")
+        raise HTTPException(404, "Hospital not found")
     product.status = "ISSUED"
     product.hospital_id = hospital.id
     product.issued_by = user.full_name
@@ -545,7 +545,7 @@ def council_results(user=Depends(get_current_user), db: Session = Depends(get_db
 @router.get("/stats")
 def stats(user=Depends(get_current_user), db: Session = Depends(get_db)):
     if "stats" not in ROLE_PERMISSIONS.get(user.role, set()) and user.role != "COUNCIL":
-        raise HTTPException(403, "Hakuna ruhusa / Permission denied")
+        raise HTTPException(403, "Permission denied")
     total_donors = db.query(Donor).count()
     total_donations = db.query(Donation).count()
 

@@ -2,13 +2,13 @@
 
 const API = "/api";
 const NAV_ITEMS = [
-  { key: "dashboard",  label: "Dashibodi",       perm: "stats" },
-  { key: "donors",     label: "Wachangiaji",     perm: "donors" },
-  { key: "donations",  label: "Michango",        perm: "donations" },
-  { key: "recruiting", label: "Urekruitimenti",  perm: "recruiting" },
-  { key: "lab",        label: "Maabara",         perm: "lab" },
-  { key: "products",   label: "Bidhaa za Damu",  perm: "products" },
-  { key: "council",    label: "Halmashauri",     perm: "council" },
+  { key: "dashboard",  label: "Dashboard",      perm: "stats" },
+  { key: "donors",     label: "Donors",         perm: "donors" },
+  { key: "donations",  label: "Donations",      perm: "donations" },
+  { key: "recruiting", label: "Recruiting",     perm: "recruiting" },
+  { key: "lab",        label: "Laboratory",     perm: "lab" },
+  { key: "products",   label: "Blood Products", perm: "products" },
+  { key: "council",    label: "Council",        perm: "council" },
 ];
 
 const ROLE_PERMS = {
@@ -45,10 +45,10 @@ async function api(path, opts = {}) {
   const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
   if (token) headers["Authorization"] = "Bearer " + token;
   const res = await fetch(API + path, { ...opts, headers });
-  if (res.status === 401 && user) { doLogout(); throw new Error("Kipindi kimeisha"); }
+  if (res.status === 401 && user) { doLogout(); throw new Error("Session expired"); }
   let data = null;
   try { data = await res.json(); } catch { /* no body */ }
-  if (!res.ok) throw new Error((data && data.detail) || "Hitilafu / Error " + res.status);
+  if (!res.ok) throw new Error((data && data.detail) || "Error " + res.status);
   return data;
 }
 
@@ -154,7 +154,7 @@ function showSection(key) {
   document.querySelectorAll(".navbtn").forEach(b =>
     b.classList.toggle("active", b.dataset.section === key));
   const content = document.getElementById("content");
-  content.innerHTML = '<p class="empty">Inapakia… / Loading…</p>';
+  content.innerHTML = '<p class="empty">Loading…</p>';
   const views = {
     dashboard: viewDashboard, donors: viewDonors, donations: viewDonations,
     recruiting: viewRecruiting, lab: viewLab, products: viewProducts,
@@ -183,20 +183,20 @@ async function viewDashboard(el) {
   const byHospital = Object.entries(s.products.issued_by_hospital).map(([k, v]) => ({ label: k, value: v }));
 
   el.innerHTML = `
-    <h2 class="section">Dashibodi / Dashboard</h2>
-    <p class="section-sub">Takwimu za jumla za banki ya damu</p>
+    <h2 class="section">Dashboard</h2>
+    <p class="section-sub">Overall blood bank statistics</p>
     <div class="grid-4">
-      <div class="card stat-card"><div class="num">${s.donors.total}</div><div class="lbl">Wachangiaji / Donors</div></div>
-      <div class="card stat-card"><div class="num">${s.donors.eligible}</div><div class="lbl">Wanaostahili / Eligible now</div></div>
-      <div class="card stat-card"><div class="num">${s.donations.total}</div><div class="lbl">Michango / Donations</div></div>
-      <div class="card stat-card"><div class="num">${s.tti.tested}</div><div class="lbl">Vipimo / Tested</div></div>
+      <div class="card stat-card"><div class="num">${s.donors.total}</div><div class="lbl">Donors</div></div>
+      <div class="card stat-card"><div class="num">${s.donors.eligible}</div><div class="lbl">Eligible now</div></div>
+      <div class="card stat-card"><div class="num">${s.donations.total}</div><div class="lbl">Donations</div></div>
+      <div class="card stat-card"><div class="num">${s.tti.tested}</div><div class="lbl">Tested</div></div>
     </div>
     <div class="grid-2">
-      <div class="card"><h3>Makundi ya damu / Blood groups (count & %)</h3>${barChart(groups) || '<p class="empty">Hakuna data</p>'}</div>
-      <div class="card"><h3>TTI reactive (${s.tti.reactive_pct}% ya vipimo)</h3>${barChart(tti, "green")}</div>
-      <div class="card"><h3>Bidhaa kwa hali / Products by status</h3>${barChart(prodStatus, "alt")}</div>
-      <div class="card"><h3>Bidhaa kwa aina / Products by type</h3>${barChart(prodType, "alt")}</div>
-      <div class="card wide"><h3>Zilizotumwa hospitalini / Issued by hospital</h3>${barChart(byHospital, "green") || '<p class="empty">Hakuna data</p>'}</div>
+      <div class="card"><h3>Blood groups (count & %)</h3>${barChart(groups) || '<p class="empty">No data</p>'}</div>
+      <div class="card"><h3>TTI reactive (${s.tti.reactive_pct}% of tests)</h3>${barChart(tti, "green")}</div>
+      <div class="card"><h3>Products by status</h3>${barChart(prodStatus, "alt")}</div>
+      <div class="card"><h3>Products by type</h3>${barChart(prodType, "alt")}</div>
+      <div class="card wide"><h3>Issued by hospital</h3>${barChart(byHospital, "green") || '<p class="empty">No data</p>'}</div>
     </div>`;
 }
 
@@ -204,26 +204,26 @@ async function viewDashboard(el) {
 
 async function viewDonors(el) {
   el.innerHTML = `
-    <h2 class="section">Wachangiaji Damu / Donors</h2>
-    <p class="section-sub">Kusajili na kutafuta wachangiaji damu</p>
+    <h2 class="section">Blood Donors</h2>
+    <p class="section-sub">Register and search blood donors</p>
     <div class="grid-2">
       <div class="card wide">
         <div class="filters">
-          <div style="flex:1"><label>Tafuta / Search</label><input id="donorSearch" placeholder="Jina, namba au simu…"></div>
-          <div><button class="btn btn-primary" id="btnSearchDonors">Tafuta</button></div>
+          <div style="flex:1"><label>Search</label><input id="donorSearch" placeholder="Name, number or phone…"></div>
+          <div><button class="btn btn-primary" id="btnSearchDonors">Search</button></div>
         </div>
         <div id="donorTable" class="table-scroll"></div>
       </div>
       <div class="card">
-        <h3>Ongeza mchangiaji / Add donor</h3>
+        <h3>Add donor</h3>
         <form id="donorForm" class="inline">
-          <div class="full"><label>Majina / Names *</label><input name="names" required></div>
-          <div><label>Tarehe ya kuzaliwa</label><input name="birth_date" type="date"></div>
-          <div><label>Jinsia</label><select name="sex"><option value=""></option><option>M</option><option>F</option></select></div>
-          <div><label>Simu / Phone</label><input name="phone"></div>
-          <div><label>Wilaya / District</label><input name="district"></div>
-          <div><label>Halmashauri / Council</label><input name="council"></div>
-          <div><button class="btn btn-primary">Hifadhi</button></div>
+          <div class="full"><label>Names *</label><input name="names" required></div>
+          <div><label>Date of birth</label><input name="birth_date" type="date"></div>
+          <div><label>Sex</label><select name="sex"><option value=""></option><option>M</option><option>F</option></select></div>
+          <div><label>Phone</label><input name="phone"></div>
+          <div><label>District</label><input name="district"></div>
+          <div><label>Council</label><input name="council"></div>
+          <div><button class="btn btn-primary">Save</button></div>
         </form>
       </div>
     </div>`;
@@ -232,8 +232,8 @@ async function viewDonors(el) {
     const rows = await api("/donors?search=" + encodeURIComponent(search));
     document.getElementById("donorTable").innerHTML = rows.length ? `
       <table><thead><tr>
-        <th>Donation No</th><th>Majina</th><th>Mara</th><th>Mwisho</th>
-        <th>Eligible hadi</th><th>Hali</th><th></th>
+        <th>Donation No</th><th>Names</th><th>Times</th><th>Last donation</th>
+        <th>Eligible after</th><th>Status</th><th></th>
       </tr></thead><tbody>
       ${rows.map(d => `
         <tr>
@@ -243,9 +243,9 @@ async function viewDonors(el) {
           <td>${esc(d.last_donation_date || "—")}</td>
           <td>${esc(d.eligible_after || "—")}</td>
           <td>${d.eligible ? '<span class="badge ok">ELIGIBLE</span>' : '<span class="badge warn">DEFERRED</span>'}</td>
-          <td><button class="btn btn-sm btn-edit" data-id="${d.id}">Taarifa</button></td>
+          <td><button class="btn btn-sm btn-edit" data-id="${d.id}">Details</button></td>
         </tr>`).join("")}
-      </tbody></table>` : '<p class="empty">Hakuna wachangiaji</p>';
+      </tbody></table>` : '<p class="empty">No donors</p>';
     document.querySelectorAll("#donorTable [data-id]").forEach(b =>
       b.addEventListener("click", () => donorDetail(Number(b.dataset.id))));
   }
@@ -260,7 +260,7 @@ async function viewDonors(el) {
     const f = new FormData(e.target);
     try {
       await api("/donors", { method: "POST", body: JSON.stringify(Object.fromEntries(f)) });
-      toast("Mchangiaji Amesajiliwa / Donor added");
+      toast("Donor added");
       e.target.reset();
       loadDonors();
     } catch (err) { toast(err.message, true); }
@@ -274,25 +274,25 @@ async function donorDetail(id) {
   const d = data.donor;
   const content = document.getElementById("content");
   content.innerHTML = `
-    <button class="btn btn-sm" id="btnBack">← Rudi / Back</button>
+    <button class="btn btn-sm" id="btnBack">← Back</button>
     <h2 class="section mt">${esc(d.names)} <span class="muted">(${esc(d.donor_no)})</span></h2>
     <div class="card">
       <div class="detail-grid">
-        <div class="item"><b>Tarehe ya kuzaliwa</b>${esc(d.birth_date || "—")}</div>
-        <div class="item"><b>Jinsia</b>${esc(d.sex || "—")}</div>
-        <div class="item"><b>Simu</b>${esc(d.phone || "—")}</div>
-        <div class="item"><b>Wilaya</b>${esc(d.district || "—")}</div>
-        <div class="item"><b>Halmashauri</b>${esc(d.council || "—")}</div>
-        <div class="item"><b>Mara amedonate</b>${d.times_donated}</div>
-        <div class="item"><b>Mwisho ku-donate</b>${esc(d.last_donation_date || "—")}</div>
-        <div class="item"><b>Eligible hadi</b>${esc(d.eligible_after || "—")}</div>
+        <div class="item"><b>Date of birth</b>${esc(d.birth_date || "—")}</div>
+        <div class="item"><b>Sex</b>${esc(d.sex || "—")}</div>
+        <div class="item"><b>Phone</b>${esc(d.phone || "—")}</div>
+        <div class="item"><b>District</b>${esc(d.district || "—")}</div>
+        <div class="item"><b>Council</b>${esc(d.council || "—")}</div>
+        <div class="item"><b>Times donated</b>${d.times_donated}</div>
+        <div class="item"><b>Last donation</b>${esc(d.last_donation_date || "—")}</div>
+        <div class="item"><b>Eligible after</b>${esc(d.eligible_after || "—")}</div>
       </div>
     </div>
     <div class="card">
-      <h3>Michango ya awali / Previous donations</h3>
+      <h3>Previous donations</h3>
       <div class="table-scroll">${data.donations.length ? `
         <table><thead><tr>
-          <th>Donation No</th><th>Tarehe</th><th>Sehemu</th><th>Hb</th><th>BP</th><th>ml</th><th>Majibu</th>
+          <th>Donation No</th><th>Date</th><th>Venue</th><th>Hb</th><th>BP</th><th>ml</th><th>Results</th>
         </tr></thead><tbody>
         ${data.donations.map(x => `
           <tr>
@@ -302,9 +302,9 @@ async function donorDetail(id) {
             <td>${x.hemoglobin || "—"}</td>
             <td>${esc(x.blood_pressure || "—")}</td>
             <td>${x.volume_ml}</td>
-            <td>${x.result ? `${bgroup(x.result.abod)} ${badge(x.result.status)}` : '<span class="muted">Haijapimwa</span>'}</td>
+            <td>${x.result ? `${bgroup(x.result.abod)} ${badge(x.result.status)}` : '<span class="muted">Not tested</span>'}</td>
           </tr>`).join("")}
-        </tbody></table>` : '<p class="empty">Hakuna michango</p>'}</div>
+        </tbody></table>` : '<p class="empty">No donations</p>'}</div>
     </div>`;
   document.getElementById("btnBack").addEventListener("click", () => showSection("donors"));
 }
@@ -313,25 +313,25 @@ async function donorDetail(id) {
 
 async function viewDonations(el) {
   el.innerHTML = `
-    <h2 class="section">Michango / Donations</h2>
-    <p class="section-sub">Kurekodi michango mipya na kuona michango ya awali</p>
+    <h2 class="section">Donations</h2>
+    <p class="section-sub">Record new donations and view previous ones</p>
     <div class="card">
-      <h3>Rekodi mchango / Record donation</h3>
+      <h3>Record donation</h3>
       <form id="donationForm" class="inline">
         <div><label>Donor ID *</label><input name="donor_id" type="number" required></div>
-        <div><label>Sehemu / Venue</label><input name="venue"></div>
-        <div><label>Wilaya</label><input name="district"></div>
+        <div><label>Venue</label><input name="venue"></div>
+        <div><label>District</label><input name="district"></div>
         <div><label>Hemoglobin</label><input name="hemoglobin" type="number" step="0.1"></div>
         <div><label>BP</label><input name="blood_pressure" placeholder="120/80"></div>
         <div><label>Volume (ml)</label><input name="volume_ml" type="number" value="450"></div>
-        <div><button class="btn btn-primary">Rekodi</button></div>
+        <div><button class="btn btn-primary">Record</button></div>
       </form>
     </div>
     <div class="card">
       <div class="filters">
-        <div><label>Kuanzia</label><input id="dFrom" type="date"></div>
-        <div><label>Hadi</label><input id="dTo" type="date"></div>
-        <div><button class="btn" id="btnFilterDon">Chuja</button></div>
+        <div><label>From</label><input id="dFrom" type="date"></div>
+        <div><label>To</label><input id="dTo" type="date"></div>
+        <div><button class="btn" id="btnFilterDon">Filter</button></div>
       </div>
       <div id="donationTable" class="table-scroll"></div>
     </div>`;
@@ -342,8 +342,8 @@ async function viewDonations(el) {
     const rows = await api(`/donations?date_from=${from}&date_to=${to}`);
     document.getElementById("donationTable").innerHTML = rows.length ? `
       <table><thead><tr>
-        <th>Donation No</th><th>Donor</th><th>Tarehe</th><th>Sehemu</th>
-        <th>Hb</th><th>ml</th><th>Majibu</th>
+        <th>Donation No</th><th>Donor</th><th>Date</th><th>Venue</th>
+        <th>Hb</th><th>ml</th><th>Results</th>
       </tr></thead><tbody>
       ${rows.map(d => `
         <tr>
@@ -353,9 +353,9 @@ async function viewDonations(el) {
           <td>${esc(d.venue || "—")}</td>
           <td>${d.hemoglobin || "—"}</td>
           <td>${d.volume_ml}</td>
-          <td>${d.result ? `${bgroup(d.result.abod)} ${badge(d.result.status)}` : '<span class="muted">Haijapimwa</span>'}</td>
+          <td>${d.result ? `${bgroup(d.result.abod)} ${badge(d.result.status)}` : '<span class="muted">Not tested</span>'}</td>
         </tr>`).join("")}
-      </tbody></table>` : '<p class="empty">Hakuna michango</p>';
+      </tbody></table>` : '<p class="empty">No donations</p>';
   }
 
   document.getElementById("btnFilterDon").addEventListener("click", loadDonations);
@@ -371,7 +371,7 @@ async function viewDonations(el) {
     };
     try {
       const d = await api("/donations", { method: "POST", body: JSON.stringify(body) });
-      toast(`Mchango ${d.donation_no} umerekodiwa`);
+      toast(`Donation ${d.donation_no} recorded`);
       e.target.reset();
       loadDonations();
     } catch (err) { toast(err.message, true); }
@@ -384,37 +384,37 @@ async function viewDonations(el) {
 
 async function viewRecruiting(el) {
   el.innerHTML = `
-    <h2 class="section">Urekruitimenti / Recruiting</h2>
-    <p class="section-sub">Maombi ya viwanja, SMS kwa wachangiaji na takwimu za maeneo</p>
+    <h2 class="section">Recruiting</h2>
+    <p class="section-sub">Venue requests, donor SMS and area statistics</p>
     <div class="grid-2">
       <div class="card">
-        <h3>Omba sehemu ya zoezi / Request venue</h3>
+        <h3>Request venue for a donation drive</h3>
         <form id="visitForm" class="inline">
-          <div><label>Sehemu / Venue *</label><input name="venue" required></div>
-          <div><label>Wilaya</label><input name="district"></div>
-          <div><label>Tarehe *</label><input name="visit_date" type="date" required></div>
-          <div><label>Watarajiwa / Expected</label><input name="expected_donors" type="number" value="50"></div>
-          <div><button class="btn btn-primary">Omba</button></div>
+          <div><label>Venue *</label><input name="venue" required></div>
+          <div><label>District</label><input name="district"></div>
+          <div><label>Date *</label><input name="visit_date" type="date" required></div>
+          <div><label>Expected donors</label><input name="expected_donors" type="number" value="50"></div>
+          <div><button class="btn btn-primary">Request</button></div>
         </form>
       </div>
       <div class="card">
-        <h3>Tuma SMS kwa wachangiaji / Send SMS</h3>
+        <h3>Send SMS to donors</h3>
         <form id="smsForm">
-          <label>Ujumbe / Message</label>
-          <textarea name="message" rows="2" required>Tafadhali njoo kuchangia damu wiki hii. Damu ni uzima!</textarea>
+          <label>Message</label>
+          <textarea name="message" rows="2" required>Please come donate blood this week. Blood is life!</textarea>
           <div class="filters mt">
-            <div><label>Kwa nani</label>
+            <div><label>Target</label>
               <select name="target">
-                <option value="ELIGIBLE">Wanaostahili (eligible)</option>
-                <option value="ALL">Wote (all)</option>
+                <option value="ELIGIBLE">Eligible donors</option>
+                <option value="ALL">All donors</option>
               </select></div>
-            <div><button class="btn btn-primary">Tuma SMS</button></div>
+            <div><button class="btn btn-primary">Send SMS</button></div>
           </div>
         </form>
       </div>
-      <div class="card wide"><h3>Ziara za uwanjani / Site visits</h3><div id="visitTable" class="table-scroll"></div></div>
-      <div class="card"><h3>Takwimu za maeneo / Area statistics</h3><div id="areaStats"></div></div>
-      <div class="card"><h3>Historia ya SMS / SMS log</h3><div id="smsLog" class="table-scroll"></div></div>
+      <div class="card wide"><h3>Site visits</h3><div id="visitTable" class="table-scroll"></div></div>
+      <div class="card"><h3>Area statistics</h3><div id="areaStats"></div></div>
+      <div class="card"><h3>SMS log</h3><div id="smsLog" class="table-scroll"></div></div>
     </div>`;
 
   async function loadAll() {
@@ -423,8 +423,8 @@ async function viewRecruiting(el) {
     ]);
     document.getElementById("visitTable").innerHTML = visits.length ? `
       <table><thead><tr>
-        <th>Tarehe</th><th>Sehemu</th><th>Wilaya</th><th>Watarajiwa</th>
-        <th>Waliofanikisha</th><th>Hali</th><th></th>
+        <th>Date</th><th>Venue</th><th>District</th><th>Expected</th>
+        <th>Actual</th><th>Status</th><th></th>
       </tr></thead><tbody>
       ${visits.map(v => `
         <tr>
@@ -435,28 +435,28 @@ async function viewRecruiting(el) {
           <td>${v.actual_donors || "—"}</td>
           <td>${badge(v.status)}</td>
           <td>${v.status === "REQUESTED"
-            ? `<button class="btn btn-sm btn-approve" data-id="${v.id}">Kamilisha</button>` : ""}</td>
+            ? `<button class="btn btn-sm btn-approve" data-id="${v.id}">Complete</button>` : ""}</td>
         </tr>`).join("")}
-      </tbody></table>` : '<p class="empty">Hakuna ziara</p>';
+      </tbody></table>` : '<p class="empty">No visits</p>';
     document.querySelectorAll("#visitTable [data-id]").forEach(btn =>
       btn.addEventListener("click", async () => {
-        const n = Number(prompt("Idadi ya waliocahangia / Actual donors:", "0") || 0);
+        const n = Number(prompt("Actual number of donors:", "0") || 0);
         try {
           await api(`/visits/${btn.dataset.id}/complete?actual_donors=${n}`, { method: "POST" });
-          toast("Ziara imekamilika"); loadAll();
+          toast("Visit completed"); loadAll();
         } catch (err) { toast(err.message, true); }
       }));
 
     const areas = Object.entries(stats.donations_by_area).map(([k, v]) => ({ label: k || "—", value: v }));
     document.getElementById("areaStats").innerHTML = `
       <p class="muted mt" style="margin-bottom:10px">
-        Ziara: ${stats.visits.total} jumla · ${stats.visits.requested} zinazosubiri ·
-        ${stats.visits.done} zimekamilika · ${stats.visits.actual_donors} wachangiaji
+        Visits: ${stats.visits.total} total · ${stats.visits.requested} pending ·
+        ${stats.visits.done} completed · ${stats.visits.actual_donors} donors reached
       </p>
-      ${barChart(areas, "alt") || '<p class="empty">Hakuna data</p>'}`;
+      ${barChart(areas, "alt") || '<p class="empty">No data</p>'}`;
 
     document.getElementById("smsLog").innerHTML = sms.length ? `
-      <table><thead><tr><th>Muda</th><th>Mchangiaji</th><th>Simu</th><th>Ujumbe</th></tr></thead><tbody>
+      <table><thead><tr><th>Time</th><th>Donor</th><th>Phone</th><th>Message</th></tr></thead><tbody>
       ${sms.map(s => `
         <tr>
           <td class="muted">${esc(s.sent_at)}</td>
@@ -464,7 +464,7 @@ async function viewRecruiting(el) {
           <td>${esc(s.phone)}</td>
           <td>${esc(s.message)}</td>
         </tr>`).join("")}
-      </tbody></table>` : '<p class="empty">Hakuna SMS</p>';
+      </tbody></table>` : '<p class="empty">No SMS sent</p>';
   }
 
   document.getElementById("visitForm").addEventListener("submit", async e => {
@@ -479,7 +479,7 @@ async function viewRecruiting(el) {
           expected_donors: Number(f.get("expected_donors") || 0),
         }),
       });
-      toast("Ombi la ziara limetumwa");
+      toast("Venue request submitted");
       e.target.reset(); loadAll();
     } catch (err) { toast(err.message, true); }
   });
@@ -492,7 +492,7 @@ async function viewRecruiting(el) {
         method: "POST",
         body: JSON.stringify({ target: f.get("target"), message: f.get("message") }),
       });
-      toast(`SMS ${r.sent} zimetumwa`);
+      toast(`${r.sent} SMS sent`);
       loadAll();
     } catch (err) { toast(err.message, true); }
   });
@@ -517,29 +517,29 @@ function resultRow(d, canApprove) {
       <td>${badge(r.status || "")}${r.approved_by ? `<br><span class="muted">${esc(r.approved_by)}</span>` : ""}</td>
       <td>
         <button class="btn btn-sm btn-edit" data-edit="${r.id}"
-          data-d='${esc(JSON.stringify({ id: r.id, donation_id: d.id, abod: r.abod, hiv: r.hiv, hbv: r.hbv, hcv: r.hcv, syphilis: r.syphilis, machine_ref: r.machine_ref, notes: r.notes }))}'>Hariri</button>
+          data-d='${esc(JSON.stringify({ id: r.id, donation_id: d.id, abod: r.abod, hiv: r.hiv, hbv: r.hbv, hcv: r.hcv, syphilis: r.syphilis, machine_ref: r.machine_ref, notes: r.notes }))}'>Edit</button>
         ${canApprove && r.status !== "APPROVED" && !ttiBad
-          ? `<button class="btn btn-sm btn-approve" data-approve="${r.id}">Idhinisha</button>` : ""}
+          ? `<button class="btn btn-sm btn-approve" data-approve="${r.id}">Approve</button>` : ""}
       </td>
     </tr>`;
 }
 
 function resultFormHTML() {
   return `
-    <h3 id="resultFormTitle">Weka majibu / Enter results (ABOD & TTIs)</h3>
+    <h3 id="resultFormTitle">Enter results (ABOD & TTIs)</h3>
     <form id="resultForm" class="inline">
       <div><label>Donation ID *</label><input name="donation_id" type="number" required></div>
-      <div><label>Kundi (ABOD) *</label><select name="abod" required>
+      <div><label>Blood group (ABOD) *</label><select name="abod" required>
         ${ABOD_GROUPS.map(g => `<option>${g}</option>`).join("")}</select></div>
       <div><label>HIV</label><select name="hiv"><option>NEGATIVE</option><option>POSITIVE</option></select></div>
       <div><label>HBV</label><select name="hbv"><option>NEGATIVE</option><option>POSITIVE</option></select></div>
       <div><label>HCV</label><select name="hcv"><option>NEGATIVE</option><option>POSITIVE</option></select></div>
       <div><label>VDRL</label><select name="syphilis"><option>NEGATIVE</option><option>POSITIVE</option></select></div>
-      <div><label>Mashine ref / Machine ref</label><input name="machine_ref" placeholder="eg. ABOD-01:R4521"></div>
-      <div class="full"><label>Maelezo / Notes</label><input name="notes"></div>
+      <div><label>Machine ref</label><input name="machine_ref" placeholder="e.g. ABOD-01:R4521"></div>
+      <div class="full"><label>Notes</label><input name="notes"></div>
       <div>
-        <button class="btn btn-primary" type="submit">Hifadhi</button>
-        <button class="btn hidden" type="button" id="btnCancelEdit">Ghairi</button>
+        <button class="btn btn-primary" type="submit">Save</button>
+        <button class="btn hidden" type="button" id="btnCancelEdit">Cancel</button>
       </div>
     </form>`;
 }
@@ -558,10 +558,10 @@ function bindResultForm(loadResults) {
     try {
       if (editingResultId) {
         await api("/lab/results/" + editingResultId, { method: "PUT", body: JSON.stringify(body) });
-        toast("Majibu yamehaririwa");
+        toast("Result updated");
       } else {
         await api("/lab/results", { method: "POST", body: JSON.stringify(body) });
-        toast("Majibu yamewekwa");
+        toast("Result entered");
       }
       resetResultForm();
       loadResults();
@@ -575,7 +575,7 @@ function resetResultForm() {
   const form = document.getElementById("resultForm");
   if (!form) return;
   form.reset();
-  document.getElementById("resultFormTitle").textContent = "Weka majibu / Enter results (ABOD & TTIs)";
+  document.getElementById("resultFormTitle").textContent = "Enter results (ABOD & TTIs)";
   document.getElementById("btnCancelEdit").classList.add("hidden");
 }
 
@@ -584,7 +584,7 @@ function bindResultActions(loadResults) {
     btn.addEventListener("click", async () => {
       try {
         await api(`/lab/results/${btn.dataset.approve}/approve`, { method: "POST" });
-        toast("Majibu yameidhinishwa / Approved");
+        toast("Result approved");
         loadResults();
       } catch (err) { toast(err.message, true); }
     }));
@@ -601,7 +601,7 @@ function bindResultActions(loadResults) {
       form.syphilis.value = d.syphilis || "NEGATIVE";
       form.machine_ref.value = d.machine_ref || "";
       form.notes.value = d.notes || "";
-      document.getElementById("resultFormTitle").textContent = `Hariri majibu #${d.id} / Edit result`;
+      document.getElementById("resultFormTitle").textContent = `Edit result #${d.id}`;
       document.getElementById("btnCancelEdit").classList.remove("hidden");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }));
@@ -609,30 +609,30 @@ function bindResultActions(loadResults) {
 
 async function viewLab(el) {
   el.innerHTML = `
-    <h2 class="section">Maabara / Laboratory</h2>
-    <p class="section-sub">Majibu ya ABOD & TTIs, idhini na ripoti</p>
+    <h2 class="section">Laboratory</h2>
+    <p class="section-sub">ABOD & TTI results, approval and reports</p>
     <div class="card">${resultFormHTML()}</div>
     <div class="card">
-      <h3>Michango inayosubiri vipimo / Pending testing</h3>
+      <h3>Pending testing</h3>
       <div id="pendingTable" class="table-scroll"></div>
     </div>
     <div class="card">
-      <h3>Majibu yote / All results</h3>
+      <h3>All results</h3>
       <div class="filters">
-        <div><label>Hali</label><select id="fStatus">
-          <option value="">Zote</option><option>REVIEWED</option>
+        <div><label>Status</label><select id="fStatus">
+          <option value="">All</option><option>REVIEWED</option>
           <option>APPROVED</option><option>DISCREPANCY</option></select></div>
-        <div><label>Donation No kuanzia</label><input id="fNoFrom" type="number" placeholder="23000"></div>
-        <div><label>Donation No hadi</label><input id="fNoTo" type="number" placeholder="25000"></div>
-        <div><label>Kundi</label><select id="fAbod"><option value="">Zote</option>
+        <div><label>Donation No from</label><input id="fNoFrom" type="number" placeholder="23000"></div>
+        <div><label>Donation No to</label><input id="fNoTo" type="number" placeholder="25000"></div>
+        <div><label>Blood group</label><select id="fAbod"><option value="">All</option>
           ${ABOD_GROUPS.map(g => `<option>${g}</option>`).join("")}</select></div>
         <div><label>TTI</label><select id="fTti">
-          <option value="">Zote</option><option value="REACTIVE">Reactive</option>
+          <option value="">All</option><option value="REACTIVE">Reactive</option>
           <option value="NON_REACTIVE">Non-reactive</option></select></div>
-        <div><button class="btn btn-primary" id="btnFilterRes">Chuja</button></div>
+        <div><button class="btn btn-primary" id="btnFilterRes">Filter</button></div>
         <div>
-          <a class="btn btn-sm pdf-link" id="btnPdfResults" href="#" target="_blank">⬇ PDF majibu</a>
-          <a class="btn btn-sm pdf-link" id="btnPdfProducts" href="#" target="_blank">⬇ PDF bidhaa</a>
+          <a class="btn btn-sm pdf-link" id="btnPdfResults" href="#" target="_blank">⬇ Results PDF</a>
+          <a class="btn btn-sm pdf-link" id="btnPdfProducts" href="#" target="_blank">⬇ Products PDF</a>
         </div>
       </div>
       <div id="resultsTable" class="table-scroll"></div>
@@ -641,16 +641,16 @@ async function viewLab(el) {
   async function loadPending() {
     const rows = await api("/lab/pending");
     document.getElementById("pendingTable").innerHTML = rows.length ? `
-      <table><thead><tr><th>Donation No</th><th>Mchangiaji</th><th>Tarehe</th><th>Sehemu</th><th></th></tr></thead><tbody>
+      <table><thead><tr><th>Donation No</th><th>Donor</th><th>Date</th><th>Venue</th><th></th></tr></thead><tbody>
       ${rows.map(d => `
         <tr>
           <td><b>${esc(d.donation_no)}</b></td>
           <td>${esc(d.donor_names || "")} <span class="muted">${esc(d.donor_no || "")}</span></td>
           <td>${esc(d.donation_date)}</td>
           <td>${esc(d.venue || "—")}</td>
-          <td><button class="btn btn-sm" data-use="${d.id}">Weka majibu</button></td>
+          <td><button class="btn btn-sm" data-use="${d.id}">Enter results</button></td>
         </tr>`).join("")}
-      </tbody></table>` : '<p class="empty">Hakuna michango inayosubiri</p>';
+      </tbody></table>` : '<p class="empty">No donations pending testing</p>';
     document.querySelectorAll("[data-use]").forEach(b =>
       b.addEventListener("click", () => {
         const form = document.getElementById("resultForm");
@@ -673,11 +673,11 @@ async function viewLab(el) {
     const rows = await api("/lab/results?" + filterQuery());
     document.getElementById("resultsTable").innerHTML = rows.length ? `
       <table><thead><tr>
-        <th>Donation No</th><th>Mchangiaji</th><th>Tarehe</th><th>ABOD</th>
-        <th>HIV</th><th>HBV</th><th>HCV</th><th>VDRL</th><th>Mashine</th><th>Hali</th><th></th>
+        <th>Donation No</th><th>Donor</th><th>Date</th><th>ABOD</th>
+        <th>HIV</th><th>HBV</th><th>HCV</th><th>VDRL</th><th>Machine</th><th>Status</th><th></th>
       </tr></thead><tbody>
       ${rows.map(d => resultRow(d, APPROVERS.has(user.role))).join("")}
-      </tbody></table>` : '<p class="empty">Hakuna majibu</p>';
+      </tbody></table>` : '<p class="empty">No results</p>';
     bindResultActions(loadResults);
   }
 
@@ -697,14 +697,14 @@ async function viewLab(el) {
 
 async function viewProducts(el) {
   el.innerHTML = `
-    <h2 class="section">Bidhaa za Damu / Blood Products</h2>
-    <p class="section-sub">Sorting (PRC, FFP, PLT, CRYO), labeling na kutuma hospitalini</p>
+    <h2 class="section">Blood Products</h2>
+    <p class="section-sub">Sorting (PRC, FFP, PLT, CRYO), labeling and issuing to hospitals</p>
     <div class="card">
-      <h3>Fanya sorting / Sort products</h3>
+      <h3>Sort products</h3>
       <form id="sortForm" class="inline">
         <div><label>Donation ID *</label><input name="donation_id" type="number" required></div>
         <div class="full">
-          <label>Aina / Types</label>
+          <label>Types</label>
           <div class="filters" style="margin:0">
             ${PRODUCT_TYPES.map(t => `
               <label style="font-weight:400;text-transform:none;display:flex;align-items:center;gap:6px">
@@ -716,12 +716,12 @@ async function viewProducts(el) {
     </div>
     <div class="card">
       <div class="filters">
-        <div><label>Aina</label><select id="pType"><option value="">Zote</option>
+        <div><label>Type</label><select id="pType"><option value="">All</option>
           ${PRODUCT_TYPES.map(t => `<option>${t}</option>`).join("")}</select></div>
-        <div><label>Hali</label><select id="pStatus">
-          <option value="">Zote</option><option>QUARANTINE</option>
+        <div><label>Status</label><select id="pStatus">
+          <option value="">All</option><option>QUARANTINE</option>
           <option>READY</option><option>ISSUED</option></select></div>
-        <div><button class="btn btn-primary" id="btnFilterProd">Chuja</button></div>
+        <div><button class="btn btn-primary" id="btnFilterProd">Filter</button></div>
       </div>
       <div id="productTable" class="table-scroll"></div>
     </div>`;
@@ -739,8 +739,8 @@ async function viewProducts(el) {
       `<option value="${h.id}">${esc(h.name)} (${esc(h.region)})</option>`).join("");
     document.getElementById("productTable").innerHTML = rows.length ? `
       <table><thead><tr>
-        <th>Code</th><th>Aina</th><th>Donation</th><th>ABOD</th><th>Muda wa mwisho</th>
-        <th>Hali</th><th>Salama?</th><th>Hospitali</th><th></th>
+        <th>Code</th><th>Type</th><th>Donation</th><th>ABOD</th><th>Expiry</th>
+        <th>Status</th><th>Safe?</th><th>Hospital</th><th></th>
       </tr></thead><tbody>
       ${rows.map(pr => `
         <tr>
@@ -753,19 +753,19 @@ async function viewProducts(el) {
           <td>${pr.safe ? '<span class="badge ok">SAFE</span>' : '<span class="badge bad">NOT SAFE</span>'}</td>
           <td>${esc(pr.hospital || "—")}</td>
           <td>
-            ${pr.status === "QUARANTINE" ? `<button class="btn btn-sm btn-warn" data-label="${pr.id}">Lebeli</button>` : ""}
+            ${pr.status === "QUARANTINE" ? `<button class="btn btn-sm btn-warn" data-label="${pr.id}">Label</button>` : ""}
             ${pr.status === "READY" ? `
               <select data-hosp="${pr.id}" style="width:auto">${hospitalOptions}</select>
-              <button class="btn btn-sm btn-approve" data-issue="${pr.id}">Tuma</button>` : ""}
+              <button class="btn btn-sm btn-approve" data-issue="${pr.id}">Issue</button>` : ""}
           </td>
         </tr>`).join("")}
-      </tbody></table>` : '<p class="empty">Hakuna bidhaa</p>';
+      </tbody></table>` : '<p class="empty">No products</p>';
 
     document.querySelectorAll("[data-label]").forEach(b =>
       b.addEventListener("click", async () => {
         try {
           await api(`/products/${b.dataset.label}/label`, { method: "POST" });
-          toast("Bidhaa imelebeliwa / Labeled READY");
+          toast("Product labeled READY");
           loadProducts();
         } catch (err) { toast(err.message, true); }
       }));
@@ -776,7 +776,7 @@ async function viewProducts(el) {
           await api(`/products/${b.dataset.issue}/issue`, {
             method: "POST", body: JSON.stringify({ hospital_id: Number(hospId) }),
           });
-          toast("Bidhaa imetumwa hospitalini / Issued");
+          toast("Product issued to hospital");
           loadProducts();
         } catch (err) { toast(err.message, true); }
       }));
@@ -786,7 +786,7 @@ async function viewProducts(el) {
   document.getElementById("sortForm").addEventListener("submit", async e => {
     e.preventDefault();
     const types = [...document.querySelectorAll("#sortForm input[name=type]:checked")].map(c => c.value);
-    if (!types.length) { toast("Chagua angalau aina moja", true); return; }
+    if (!types.length) { toast("Select at least one product type", true); return; }
     try {
       await api("/products/sort", {
         method: "POST",
@@ -795,7 +795,7 @@ async function viewProducts(el) {
           types,
         }),
       });
-      toast("Bidhaa zimeundwa / Products created");
+      toast("Products created");
       loadProducts();
     } catch (err) { toast(err.message, true); }
   });
@@ -808,13 +808,13 @@ async function viewProducts(el) {
 async function viewCouncil(el) {
   const rows = await api("/council/results");
   el.innerHTML = `
-    <h2 class="section">Halmashauri / Council View</h2>
-    <p class="section-sub">Majibu yaliyoidhinishwa tu ${user.council ? `— ${esc(user.council)}` : "(maeneo yote)"} · view only</p>
+    <h2 class="section">Council View</h2>
+    <p class="section-sub">Approved results only ${user.council ? `— ${esc(user.council)}` : "(all areas)"} · view only</p>
     <div class="card table-scroll">
       ${rows.length ? `
         <table><thead><tr>
-          <th>Donation No</th><th>Mchangiaji</th><th>Wilaya</th><th>Tarehe</th>
-          <th>ABOD</th><th>HIV</th><th>HBV</th><th>HCV</th><th>VDRL</th><th>Idhini</th>
+          <th>Donation No</th><th>Donor</th><th>District</th><th>Date</th>
+          <th>ABOD</th><th>HIV</th><th>HBV</th><th>HCV</th><th>VDRL</th><th>Approved by</th>
         </tr></thead><tbody>
         ${rows.map(d => `
           <tr>
@@ -827,7 +827,7 @@ async function viewCouncil(el) {
             <td>${badge(d.result.hcv)}</td><td>${badge(d.result.syphilis)}</td>
             <td>${esc(d.result.approved_by || "")}</td>
           </tr>`).join("")}
-        </tbody></table>` : '<p class="empty">Hakuna majibu yaliyoidhinishwa</p>'}
+        </tbody></table>` : '<p class="empty">No approved results</p>'}
     </div>`;
 }
 

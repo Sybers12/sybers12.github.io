@@ -65,10 +65,10 @@ def results_pdf(status: str = "APPROVED", no_from: int | None = None, no_to: int
 
     sheets = _styles()
     elements = [
-        Paragraph("NBTS: Taarifa ya Majibu ya Maabara / Laboratory Results Report",
+        Paragraph("NBTS: Laboratory Results Report",
                   sheets["title"]),
-        Paragraph(f"Imechapishwa / Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')} — "
-                  f"Hali / Status: {status or 'ALL'}", sheets["sub"]),
+        Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')} — "
+                  f"Status: {status or 'ALL'}", sheets["sub"]),
         Spacer(1, 8),
     ]
     data = [["Donation No", "Donor", "Date", "ABOD", "HIV", "HBV", "HCV", "VDRL", "Status"]]
@@ -96,9 +96,9 @@ def products_pdf(status: str = "", product_type: str = "",
 
     sheets = _styles()
     elements = [
-        Paragraph("NBTS: Taarifa ya Bidhaa za Damu / Blood Products Report", sheets["title"]),
-        Paragraph(f"Imechapishwa / Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')} — "
-                  f"Hali / Status: {status or 'ALL'} — Aina / Type: {product_type or 'ALL'}",
+        Paragraph("NBTS: Blood Products Report", sheets["title"]),
+        Paragraph(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')} — "
+                  f"Status: {status or 'ALL'} — Type: {product_type or 'ALL'}",
                   sheets["sub"]),
         Spacer(1, 8),
     ]

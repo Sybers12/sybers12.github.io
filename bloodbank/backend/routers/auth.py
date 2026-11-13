@@ -29,10 +29,10 @@ def get_current_user(authorization: str = Header(default=""),
                      token: str = Query(default=""), db=Depends(get_db)) -> User:
     value = token or authorization.replace("Bearer ", "").strip()
     if not value:
-        raise HTTPException(401, "Hitaji kuingia / Not logged in")
+        raise HTTPException(401, "Not logged in")
     row = db.query(Token).filter_by(token=value).one_or_none()
     if row is None:
-        raise HTTPException(401, "Token ni batili / Invalid token")
+        raise HTTPException(401, "Invalid token")
     return db.query(User).filter_by(id=row.user_id).one()
 
 
@@ -46,4 +46,4 @@ def has_permission(user: User, section: str) -> bool:
 
 def ensure_permission(user: User, section: str):
     if not has_permission(user, section):
-        raise HTTPException(403, f"Hakuna ruhusa / Permission denied for {section}")
+        raise HTTPException(403, f"Permission denied for {section}")

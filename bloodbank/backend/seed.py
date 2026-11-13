@@ -147,7 +147,7 @@ def seed():
             donor = rng.choice(donors)
             db.add(SmsLog(
                 donor_id=donor.id, phone=donor.phone,
-                message="Karibu tena! Umeondolewa ufasiri wa muda, unaweza kuchangia damu tena. Asante!",
+                message="Welcome back! Your deferral period is over - you can donate blood again. Thank you!",
                 category="ELIGIBLE", sent_by="Fatuma Ally",
             ))
         db.commit()
