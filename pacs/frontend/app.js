@@ -8,6 +8,9 @@ const state = {
   currentSeries: null,
   instances: [],
   currentIndex: 0,
+  frame: 0,
+  playing: false,
+  playTimer: null,
   tool: "wl",
   invert: false,
   wc: 40,
@@ -17,6 +20,7 @@ const state = {
   panY: 0,
   fitScale: 1,
   measurement: null,
+  modality: "",
 };
 
 const api = {
@@ -36,9 +40,9 @@ const api = {
     if (!res.ok) throw new Error("Failed to load instances");
     return res.json();
   },
-  frameUrl(sopUid, wc, ww, invert) {
+  frameUrl(sopUid, frame, wc, ww, invert) {
     const qs = new URLSearchParams({
-      frame: "0",
+      frame: String(frame),
       wc: String(wc),
       ww: String(ww),
       invert: String(invert),
@@ -63,7 +67,7 @@ function toast(msg, isError = false) {
 async function loadWorklist() {
   const params = {
     patient: $("#fPatient").value.trim(),
-    modality: $("#fModality").value.trim(),
+    modality: state.modality,
     date_from: $("#fDateFrom").value ? $("#fDateFrom").value.replaceAll("-", "") : "",
     date_to: $("#fDateTo").value ? $("#fDateTo").value.replaceAll("-", "") : "",
   };
@@ -81,7 +85,7 @@ async function loadWorklist() {
     tr.innerHTML = `
       <td>${esc(s.patient_name)}</td>
       <td>${esc(s.patient_id)}</td>
-      <td><span class="modality-badge">${esc(s.modality)}</span></td>
+      <td><span class="modality-badge mod-${esc(s.modality)}">${esc(s.modality)}</span></td>
       <td>${fmtDate(s.study_date)}</td>
       <td>${esc(s.description || "—")}</td>
       <td>${esc(s.accession_number || "—")}</td>
@@ -132,11 +136,19 @@ async function openStudy(studyUid) {
   }
 }
 
+function stopCine() {
+  state.playing = false;
+  clearInterval(state.playTimer);
+  state.playTimer = null;
+  $("#btnPlay").textContent = "▶ Play";
+}
+
 async function selectSeries(seriesUid) {
   state.currentSeries = seriesUid;
   document.querySelectorAll(".thumb").forEach((el, i) => {
     el.classList.toggle("active", state.seriesList[i] && state.seriesList[i].series_uid === seriesUid);
   });
+  stopCine();
   try {
     state.instances = await api.instances(seriesUid);
   } catch (e) {
@@ -144,14 +156,22 @@ async function selectSeries(seriesUid) {
     return;
   }
   state.currentIndex = 0;
+  state.frame = 0;
+  state.measurement = null;
   const slider = $("#sliceSlider");
   slider.max = String(Math.max(1, state.instances.length));
   slider.value = "1";
-  state.measurement = null;
   const inst = state.instances[0];
   if (inst) {
     state.wc = inst.window_center || 40;
     state.ww = inst.window_width || 400;
+    const multi = inst.number_of_frames > 1;
+    $("#cineBar").classList.toggle("hidden", !multi);
+    if (multi) {
+      $("#frameSlider").max = String(inst.number_of_frames);
+      $("#frameSlider").value = "1";
+      $("#frameLabel").textContent = `1/${inst.number_of_frames}`;
+    }
   }
   await showInstance();
 }
@@ -160,7 +180,7 @@ async function showInstance() {
   const inst = state.instances[state.currentIndex];
   if (!inst) return;
   const img = $("#frameImg");
-  img.src = api.frameUrl(inst.sop_uid, state.wc, state.ww, state.invert);
+  img.src = api.frameUrl(inst.sop_uid, state.frame, state.wc, state.ww, state.invert);
   img.onload = () => {
     const svg = $("#overlay");
     svg.setAttribute("viewBox", `0 0 ${img.naturalWidth} ${img.naturalHeight}`);
@@ -177,16 +197,18 @@ function updateCorners() {
   const series = state.seriesList.find((x) => x.series_uid === state.currentSeries);
   const inst = state.instances[state.currentIndex];
   if (!s || !inst) return;
+  const multi = inst.number_of_frames > 1;
   $("#cornerTL").textContent =
     `${s.patient_name}\n${s.patient_id} · ${s.sex || "?"} · ${fmtDate(s.birth_date)}`;
   $("#cornerTR").textContent =
-    `${s.description || ""}\n${series ? series.description || series.modality : ""}\n` +
-    `Zoom ${Math.round(state.zoom * 100)}%`;
+    `${series ? series.modality + " · " : ""}${series ? series.description || "" : ""}\n` +
+    `${s.description || ""}\nZoom ${Math.round(state.zoom * 100)}%`;
   $("#cornerBL").textContent =
     `WC ${Math.round(state.wc)} / WW ${Math.round(state.ww)}${state.invert ? " · INV" : ""}`;
-  $("#cornerBR").textContent =
-    `Img ${inst.instance_number} / ${state.instances.length}\n` +
-    `${inst.rows}×${inst.cols} · ${inst.pixel_spacing[0].toFixed(2)} mm`;
+  $("#cornerBR").textContent = multi
+    ? `Frame ${state.frame + 1} / ${inst.number_of_frames}\n${inst.rows}×${inst.cols}`
+    : `Img ${inst.instance_number} / ${state.instances.length}\n` +
+      `${inst.rows}×${inst.cols} · ${inst.pixel_spacing[0].toFixed(2)} mm`;
 }
 
 function fitImage() {
@@ -321,10 +343,12 @@ window.addEventListener("keydown", (e) => {
 
 function stepInstance(delta) {
   if (state.instances.length === 0) return;
+  stopCine();
   state.currentIndex = Math.min(
     state.instances.length - 1,
     Math.max(0, state.currentIndex + delta)
   );
+  state.frame = 0;
   state.measurement = null;
   showInstance();
 }
@@ -336,7 +360,10 @@ function showView(name) {
   $("#viewerView").classList.toggle("hidden", name !== "viewer");
   $("#navWorklist").classList.toggle("active", name === "worklist");
   $("#navViewer").classList.toggle("active", name === "viewer");
-  if (name === "worklist") loadWorklist();
+  if (name === "worklist") {
+    stopCine();
+    loadWorklist();
+  }
 }
 
 $("#navWorklist").addEventListener("click", () => showView("worklist"));
@@ -344,14 +371,25 @@ $("#navViewer").addEventListener("click", () => showView("viewer"));
 $("#btnSearch").addEventListener("click", loadWorklist);
 $("#btnReset").addEventListener("click", () => {
   $("#fPatient").value = "";
-  $("#fModality").value = "";
   $("#fDateFrom").value = "";
   $("#fDateTo").value = "";
+  state.modality = "";
+  document.querySelectorAll(".chip").forEach((c) =>
+    c.classList.toggle("active", c.dataset.modality === "")
+  );
   loadWorklist();
 });
-[$("#fPatient"), $("#fModality")].forEach((el) =>
-  el.addEventListener("keydown", (e) => e.key === "Enter" && loadWorklist())
-);
+$("#fPatient").addEventListener("keydown", (e) => e.key === "Enter" && loadWorklist());
+
+document.querySelectorAll(".chip").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    state.modality = chip.dataset.modality;
+    document.querySelectorAll(".chip").forEach((c) =>
+      c.classList.toggle("active", c === chip)
+    );
+    loadWorklist();
+  });
+});
 
 $("#fileUpload").addEventListener("change", async (e) => {
   const files = [...e.target.files];
@@ -405,9 +443,41 @@ $("#btnReset").addEventListener("click", () => {
 $("#btnPrev").addEventListener("click", () => stepInstance(-1));
 $("#btnNext").addEventListener("click", () => stepInstance(1));
 $("#sliceSlider").addEventListener("input", (e) => {
+  stopCine();
   state.currentIndex = parseInt(e.target.value, 10) - 1;
+  state.frame = 0;
   state.measurement = null;
   showInstance();
+});
+
+$("#btnPlay").addEventListener("click", () => {
+  if (state.playing) {
+    stopCine();
+    return;
+  }
+  state.playing = true;
+  $("#btnPlay").textContent = "❚❚ Pause";
+  state.playTimer = setInterval(() => {
+    const inst = state.instances[state.currentIndex];
+    if (!inst || inst.number_of_frames <= 1) return stopCine();
+    state.frame = (state.frame + 1) % inst.number_of_frames;
+    $("#frameSlider").value = String(state.frame + 1);
+    $("#frameLabel").textContent = `${state.frame + 1}/${inst.number_of_frames}`;
+    $("#frameImg").src = api.frameUrl(
+      inst.sop_uid, state.frame, state.wc, state.ww, state.invert
+    );
+  }, 110);
+});
+
+$("#frameSlider").addEventListener("input", (e) => {
+  stopCine();
+  const inst = state.instances[state.currentIndex];
+  if (!inst) return;
+  state.frame = parseInt(e.target.value, 10) - 1;
+  $("#frameLabel").textContent = `${state.frame + 1}/${inst.number_of_frames}`;
+  $("#frameImg").src = api.frameUrl(
+    inst.sop_uid, state.frame, state.wc, state.ww, state.invert
+  );
 });
 
 window.addEventListener("resize", () => {
