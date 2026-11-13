@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Blood Bank System
+Comment=NBTS Blood Bank Management System
+Exec=/home/sybers/sybers12.github.io/bloodbank/start.sh
+Icon=applications-health
+Terminal=true
+Categories=Office;Medical;

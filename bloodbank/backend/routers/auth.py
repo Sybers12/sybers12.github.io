@@ -4,6 +4,8 @@ from ..database import SessionLocal
 from ..models import ROLES, Token, User
 
 ROLE_PERMISSIONS = {
+    "ADMIN": {"donors", "donations", "recruiting", "lab", "products", "stats", "pdf", "council", "hospital_portal"},
+    "HOSPITAL": {"hospital_portal", "stats"},
     "MANAGER": {"donors", "donations", "recruiting", "lab", "products", "stats", "pdf"},
     "QUALITY": {"lab", "products", "stats", "pdf"},
     "RECRUITER": {"recruiting", "stats"},

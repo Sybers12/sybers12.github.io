@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from ..database import SessionLocal
 from ..models import (
     ABOD_GROUPS, BloodProduct, Donation, Donor, Hospital, PRODUCT_TYPES,
-    RESULT_VALUES, ROLES, SiteVisit, SmsLog, TestResult, Token, User,
-    now_iso, today_str, verify_password,
+    REGISTER_CATEGORIES, RESULT_VALUES, ROLES, SiteVisit, SmsLog, TestResult,
+    Token, User, hash_password, now_iso, today_str, verify_password,
 )
 from .auth import ROLE_PERMISSIONS, ensure_permission, get_current_user, get_db
 
@@ -27,6 +27,15 @@ SHELF_LIFE = {"PRC": 35, "FFP": 365, "PLT": 5, "CRYO": 365}
 class LoginIn(BaseModel):
     username: str
     password: str
+
+
+class RegisterIn(BaseModel):
+    username: str
+    password: str
+    full_name: str = ""
+    category: str
+    location: str = ""
+    hospital_name: str = ""
 
 
 class DonorIn(BaseModel):
@@ -148,10 +157,52 @@ def login(body: LoginIn, db: Session = Depends(get_db)):
             "council": user.council}
 
 
+@router.post("/register")
+def register(body: RegisterIn, db: Session = Depends(get_db)):
+    category = body.category.strip().upper()
+    if category not in REGISTER_CATEGORIES:
+        raise HTTPException(400, "Invalid category. Choose: " + ", ".join(REGISTER_CATEGORIES))
+    username = body.username.strip().lower()
+    if len(username) < 3:
+        raise HTTPException(400, "Username must be at least 3 characters")
+    if len(body.password) < 4:
+        raise HTTPException(400, "Password must be at least 4 characters")
+    if db.query(User).filter_by(username=username).one_or_none():
+        raise HTTPException(400, "Username already taken")
+
+    hospital_id = None
+    if category == "HOSPITAL":
+        hospital_name = body.hospital_name.strip()
+        if not hospital_name:
+            raise HTTPException(400, "Hospital name is required for the Hospital category")
+        hospital = db.query(Hospital).filter_by(name=hospital_name).one_or_none()
+        if hospital is None:
+            hospital = Hospital(name=hospital_name, region=body.location.strip())
+            db.add(hospital)
+            db.flush()
+        hospital_id = hospital.id
+
+    user = User(
+        username=username, password=hash_password(body.password),
+        full_name=body.full_name.strip() or username,
+        role=category, location=body.location.strip(), hospital_id=hospital_id,
+    )
+    db.add(user)
+    db.commit()
+
+    token = secrets.token_hex(16)
+    db.add(Token(token=token, user_id=user.id))
+    db.commit()
+    return {"token": token, "role": user.role, "full_name": user.full_name,
+            "council": user.council, "location": user.location}
+
+
 @router.get("/me")
 def me(user=Depends(get_current_user)):
     return {"username": user.username, "role": user.role,
-            "full_name": user.full_name, "council": user.council}
+            "full_name": user.full_name, "council": user.council,
+            "location": user.location,
+            "hospital": user.hospital.name if user.hospital else ""}
 
 
 @router.post("/logout")
@@ -538,6 +589,33 @@ def council_results(user=Depends(get_current_user), db: Session = Depends(get_db
         q = q.filter(Donation.district == user.council)
     rows = q.order_by(Donation.donation_no.desc()).limit(500)
     return [_donation_dict(r.donation) for r in rows]
+
+
+# ---------------- Hospital portal ----------------
+
+@router.get("/hospital/portal")
+def hospital_portal(user=Depends(get_current_user), db: Session = Depends(get_db)):
+    ensure_permission(user, "hospital_portal")
+    hospital = user.hospital
+    if hospital is None:
+        return {"hospital": {"name": user.full_name, "region": user.location},
+                "summary": {}, "products": []}
+    rows = (
+        db.query(BloodProduct).filter_by(hospital_id=hospital.id)
+        .order_by(BloodProduct.id.desc()).limit(300)
+    )
+    products = [_product_dict(p) for p in rows]
+    summary = {
+        "total": len(products),
+        "by_type": {},
+    }
+    for p in products:
+        summary["by_type"][p["product_type"]] = summary["by_type"].get(p["product_type"], 0) + 1
+    return {
+        "hospital": {"name": hospital.name, "region": hospital.region},
+        "summary": summary,
+        "products": products,
+    }
 
 
 # ---------------- Statistics ----------------

@@ -9,7 +9,7 @@
 <body>
 
 <!-- ================= LOGIN ================= -->
-<div id="loginView" class="login-wrap hidden">
+<div id="loginView" class="login-wrap">
   <div class="login-card">
     <div class="login-logo">🩸</div>
     <h1>NBTS Blood Bank</h1>
@@ -22,9 +22,36 @@
       <div id="loginError" class="login-error hidden"></div>
       <button type="submit" class="btn btn-primary btn-block">Sign in</button>
     </form>
+    <p class="login-toggle">New here? <a href="#" id="linkRegister">Create an account</a></p>
+
+    <form id="registerForm" class="hidden">
+      <label>Full name</label>
+      <input id="regName" required>
+      <label>Username</label>
+      <input id="regUser" autocomplete="username" required>
+      <label>Password</label>
+      <input id="regPass" type="password" autocomplete="new-password" required>
+      <label>Category</label>
+      <select id="regCategory">
+        <option value="ADMIN">Admin</option>
+        <option value="MANAGER">Manager</option>
+        <option value="QUALITY">Quality Control Manager</option>
+        <option value="HOSPITAL">Hospital</option>
+      </select>
+      <label>Geographical location</label>
+      <input id="regLocation" placeholder="e.g. Dar es Salaam, Ilala">
+      <div id="regHospitalWrap" class="hidden">
+        <label>Hospital name</label>
+        <input id="regHospital" placeholder="e.g. Muhimbili National Hospital">
+      </div>
+      <div id="regError" class="login-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-block">Register</button>
+    </form>
+    <p class="login-toggle hidden" id="backToLogin">Already registered? <a href="#" id="linkLogin">Sign in</a></p>
+
     <div class="login-hint">
       <b>Demo accounts</b> (password: <code>demo123</code>):<br>
-      manager, quality, recruiter, head_donation, counselor,<br>
+      admin, manager, quality, recruiter, head_donation, counselor,<br>
       head_lab, phlebotomist, lab_tech, data_clerk, council
     </div>
   </div>

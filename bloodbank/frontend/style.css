@@ -50,6 +50,15 @@ body {
   margin-top: 12px; padding: 8px 10px; border-radius: 8px;
   background: #fdecea; color: var(--bad); font-size: 13px;
 }
+.login-toggle { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.login-toggle a { color: var(--red); font-weight: 600; text-decoration: none; }
+.login-toggle a:hover { text-decoration: underline; }
+#registerForm { text-align: left; }
+#registerForm label { display: block; text-align: left; margin: 10px 0 4px; font-weight: 600; font-size: 13px; }
+#registerForm input, #registerForm select {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 8px; font-size: 14px;
+}
 .login-hint {
   margin-top: 20px; padding: 12px; border-radius: 8px;
   background: #faf5f5; color: var(--muted); font-size: 12px; line-height: 1.6;
