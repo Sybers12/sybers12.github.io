@@ -1,0 +1,13 @@
+{
+  "name": "NBTS Blood Bank",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "cd bloodbank && pip install -r requirements.txt && python3 -m backend.seed && (nohup python3 run.py > /tmp/bloodbank.log 2>&1 &) && sleep 3 && curl -s -o /dev/null -w 'Blood Bank running on port 8500\\n' http://127.0.0.1:8500/",
+  "forwardPorts": [8500],
+  "portsAttributes": {
+    "8500": {
+      "label": "Blood Bank System",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "features": {}
+}
