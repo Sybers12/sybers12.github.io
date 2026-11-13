@@ -1,8 +1,8 @@
 import random
 from datetime import date, timedelta
 
-from .database import SessionLocal, init_db
-from .models import (
+from database import SessionLocal, init_db
+from models import (
     ABOD_GROUPS, BloodProduct, Donation, Donor, Hospital, PRODUCT_TYPES,
     SiteVisit, SmsLog, TestResult, User, hash_password, now_iso, today_str,
 )

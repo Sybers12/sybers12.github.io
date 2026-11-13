@@ -17,7 +17,7 @@ fi
 
 if [ ! -f data/bloodbank.db ]; then
   echo "Seeding demo data (first run only)..."
-  python3 -m backend.seed
+  python3 seed.py
 fi
 
 URL="http://127.0.0.1:8500"

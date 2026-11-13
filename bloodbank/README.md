@@ -23,7 +23,7 @@ The interface is in English.
 
 `ADMIN`, `MANAGER`, `QUALITY` (quality control manager), `HOSPITAL`, `RECRUITER`,
 `HEAD_DONATION`, `COUNSELOR`, `HEAD_LAB`, `PHLEBOTOMIST`, `LAB_TECH`,
-`DATA_CLERK`, `COUNCIL` — see `backend/routers/auth.py` for the exact permission map.
+`DATA_CLERK`, `COUNCIL` — see `auth.py` for the exact permission map.
 
 New users can self-register on the login page (**Create an account**) choosing a
 category — Admin, Manager, Quality Control Manager or Hospital — plus their
@@ -40,7 +40,7 @@ python3 -m venv ~/myenv          # or use your existing venv
 source ~/myenv/bin/activate
 
 pip install -r requirements.txt
-python3 -m backend.seed          # loads demo data (run once)
+python3 seed.py          # loads demo data (run once)
 python3 run.py                   # serves on http://127.0.0.1:8500
 ```
 

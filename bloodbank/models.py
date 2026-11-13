@@ -5,7 +5,7 @@ from datetime import date, datetime, timezone
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .database import Base
+from database import Base
 
 ROLES = [
     "ADMIN", "MANAGER", "QUALITY", "RECRUITER", "HEAD_DONATION", "COUNSELOR",
