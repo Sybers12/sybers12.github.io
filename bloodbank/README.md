@@ -30,6 +30,12 @@ category — Admin, Manager, Quality Control Manager or Hospital — plus their
 geographical location. Hospital accounts additionally register the hospital name
 and get a portal showing products issued to them.
 
+## Download (ZIP)
+
+- **This folder**: https://github.com/Sybers12/sybers12.github.io/raw/main/downloads/bloodbank.zip
+- **OpenPACS**: https://github.com/Sybers12/sybers12.github.io/raw/main/downloads/pacs.zip
+- Whole repository: https://github.com/Sybers12/sybers12.github.io/archive/refs/heads/main.zip
+
 ## Run locally (Linux)
 
 ```bash
