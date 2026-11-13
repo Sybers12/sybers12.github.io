@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBTS Blood Bank Management System</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginView" class="login-wrap hidden">
+  <div class="login-card">
+    <div class="login-logo">🩸</div>
+    <h1>NBTS Blood Bank</h1>
+    <p class="login-sub">Mfumo wa Usimamizi wa Banki ya Damu<br>National Blood Transfusion Service</p>
+    <form id="loginForm">
+      <label>Jina la mtumiaji / Username</label>
+      <input id="loginUser" autocomplete="username" required>
+      <label>Neno la siri / Password</label>
+      <input id="loginPass" type="password" autocomplete="current-password" required>
+      <div id="loginError" class="login-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-block">Ingia / Sign in</button>
+    </form>
+    <div class="login-hint">
+      <b>Demo akaunti / demo accounts</b> (password: <code>demo123</code>):<br>
+      manager, quality, recruiter, head_donation, counselor,<br>
+      head_lab, phlebotomist, lab_tech, data_clerk, council
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="appView" class="hidden">
+  <header class="topbar">
+    <div class="brand">🩸 <span>NBTS <b>Blood Bank</b></span></div>
+    <nav id="mainNav"></nav>
+    <div class="userbox">
+      <span id="userName"></span>
+      <span id="userRole" class="role-badge"></span>
+      <button id="btnLogout" class="btn btn-sm">Toka</button>
+    </div>
+  </header>
+  <main id="content"></main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
