@@ -40,7 +40,7 @@ and get a portal showing products issued to them.
 
 ```bash
 git clone https://github.com/Sybers12/sybers12.github.io
-cd sybers12.github.io/bloodbank
+cd sybers12.github.io/projects/bloodbank
 
 python3 -m venv ~/myenv          # or use your existing venv
 source ~/myenv/bin/activate
