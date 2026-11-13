@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenPACS — Study Worklist</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand"><span class="logo">◉</span> OpenPACS</div>
+    <nav>
+      <button id="navWorklist" class="navbtn active">Worklist</button>
+      <button id="navViewer" class="navbtn" disabled>Viewer</button>
+    </nav>
+    <div class="conn" id="connBadge">● connected</div>
+  </header>
+
+  <main id="worklistView">
+    <section class="filters">
+      <input id="fPatient" type="text" placeholder="Patient name or ID" />
+      <input id="fModality" type="text" placeholder="Modality (CT, MR, CR…)" />
+      <input id="fDateFrom" type="date" title="From date" />
+      <input id="fDateTo" type="date" title="To date" />
+      <button id="btnSearch" class="primary">Search</button>
+      <button id="btnReset">Reset</button>
+      <label class="upload">
+        Upload DICOM
+        <input id="fileUpload" type="file" accept=".dcm,application/dicom" multiple hidden />
+      </label>
+    </section>
+    <section class="tablewrap">
+      <table id="studyTable">
+        <thead>
+          <tr>
+            <th>Patient</th><th>ID</th><th>Modality</th><th>Date</th>
+            <th>Description</th><th>Accession</th><th>Series</th><th>Images</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="studyRows"></tbody>
+      </table>
+      <div id="emptyMsg" class="empty hidden">No studies match the current filters.</div>
+    </section>
+    <div id="toast" class="toast hidden"></div>
+  </main>
+
+  <main id="viewerView" class="hidden">
+    <aside id="seriesBar"></aside>
+    <section id="viewportWrap">
+      <div id="viewport">
+        <div id="stage">
+          <img id="frameImg" alt="" draggable="false" />
+          <svg id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div id="cornerTL" class="corner"></div>
+        <div id="cornerTR" class="corner right"></div>
+        <div id="cornerBL" class="corner"></div>
+        <div id="cornerBR" class="corner right"></div>
+      </div>
+      <div id="toolbar">
+        <button data-tool="wl" class="tool active" title="Window/Level (drag)">W/L</button>
+        <button data-tool="pan" class="tool" title="Pan (drag)">Pan</button>
+        <button data-tool="zoom" class="tool" title="Zoom (drag)">Zoom</button>
+        <button data-tool="length" class="tool" title="Length (click 2 points)">Measure</button>
+        <span class="sep"></span>
+        <button id="btnInvert" class="tool" title="Invert">Invert</button>
+        <button id="btnReset" class="tool" title="Reset view">Reset</button>
+        <span class="sep"></span>
+        <button class="tool preset" data-wc="40" data-ww="400">Soft</button>
+        <button class="tool preset" data-wc="-600" data-ww="1500">Lung</button>
+        <button class="tool preset" data-wc="300" data-ww="1500">Bone</button>
+        <span class="sep"></span>
+        <button id="btnPrev" class="tool" title="Previous (←)">◀</button>
+        <input id="sliceSlider" type="range" min="1" max="1" value="1" />
+        <button id="btnNext" class="tool" title="Next (→)">▶</button>
+        <span id="sliceLabel" class="slice-label">1/1</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
