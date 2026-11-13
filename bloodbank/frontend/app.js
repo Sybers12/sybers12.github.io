@@ -836,4 +836,7 @@ async function viewCouncil(el) {
 document.getElementById("loginForm").addEventListener("submit", doLogin);
 document.getElementById("btnLogout").addEventListener("click", doLogout);
 
-restoreSession().then(ok => { if (ok) enterApp(); });
+restoreSession().then(ok => {
+  if (ok) enterApp();
+  else document.getElementById("loginView").classList.remove("hidden");
+});
