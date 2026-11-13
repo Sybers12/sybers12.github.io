@@ -1,7 +1,7 @@
 from fastapi import Depends, Header, HTTPException, Query
 
-from ..database import SessionLocal
-from ..models import ROLES, Token, User
+from database import SessionLocal
+from models import ROLES, Token, User
 
 ROLE_PERMISSIONS = {
     "ADMIN": {"donors", "donations", "recruiting", "lab", "products", "stats", "pdf", "council", "hospital_portal"},

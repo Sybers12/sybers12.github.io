@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-from . import config
+import config
 
 engine = create_engine(
     f"sqlite:///{config.DB_PATH}",
@@ -15,7 +15,7 @@ class Base(DeclarativeBase):
 
 
 def init_db():
-    from . import models  # noqa: F401
+    import models  # noqa: F401
 
     Base.metadata.create_all(engine)
     _migrate(engine)

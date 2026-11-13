@@ -4,16 +4,18 @@ import sys
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-from backend.database import init_db
-from backend.routers.api import router as api_router
-from backend.routers.pdf import router as pdf_router
+from database import init_db
+from api import router as api_router
+from pdf import router as pdf_router
 
 
 def main():
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import FileResponse
-    from fastapi.staticfiles import StaticFiles
+    from uvicorn import run as uvicorn_run
+
+    import config
 
     init_db()
 
@@ -27,18 +29,19 @@ def main():
     app.include_router(api_router)
     app.include_router(pdf_router)
 
-    frontend_dir = os.path.join(BASE_DIR, "frontend")
-    app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
-
     @app.get("/")
     def index():
-        return FileResponse(os.path.join(frontend_dir, "index.html"))
+        return FileResponse(os.path.join(BASE_DIR, "index.html"))
 
-    import uvicorn
+    @app.get("/static/style.css")
+    def style_css():
+        return FileResponse(os.path.join(BASE_DIR, "style.css"), media_type="text/css")
 
-    from backend import config
+    @app.get("/static/app.js")
+    def app_js():
+        return FileResponse(os.path.join(BASE_DIR, "app.js"), media_type="application/javascript")
 
-    uvicorn.run(app, host=config.HTTP_HOST, port=config.HTTP_PORT, log_level="info")
+    uvicorn_run(app, host=config.HTTP_HOST, port=config.HTTP_PORT, log_level="info")
 
 
 if __name__ == "__main__":

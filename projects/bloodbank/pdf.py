@@ -10,8 +10,8 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from sqlalchemy.orm import Session
 
-from ..models import BloodProduct, Donation, TestResult
-from .auth import ensure_permission, get_current_user, get_db
+from models import BloodProduct, Donation, TestResult
+from auth import ensure_permission, get_current_user, get_db
 
 router = APIRouter(prefix="/api/pdf")
 

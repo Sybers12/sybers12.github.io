@@ -6,13 +6,13 @@ from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..database import SessionLocal
-from ..models import (
+from database import SessionLocal
+from models import (
     ABOD_GROUPS, BloodProduct, Donation, Donor, Hospital, PRODUCT_TYPES,
     REGISTER_CATEGORIES, RESULT_VALUES, ROLES, SiteVisit, SmsLog, TestResult,
     Token, User, hash_password, now_iso, today_str, verify_password,
 )
-from .auth import ROLE_PERMISSIONS, ensure_permission, get_current_user, get_db
+from auth import ROLE_PERMISSIONS, ensure_permission, get_current_user, get_db
 
 router = APIRouter(prefix="/api")
 
