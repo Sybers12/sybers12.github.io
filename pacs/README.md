@@ -11,15 +11,21 @@ web-based image viewer in a single Python service.
   C-FIND SCP (Patient Root, patient and study level, wildcard matching), C-ECHO.
 - **REST API** (FastAPI): study worklist with filters, series/instance listing,
   windowed frame rendering, series thumbnails, HTTP DICOM upload.
-- **Web viewer**: dark radiology-style UI with
-  - study worklist (search by patient, modality, date range)
+- **Web viewer**: modern dark radiology-style UI with
+  - study worklist (search by patient, date range, one-click modality chips)
+  - color-coded modality badges (CT, MR, CR, DX, OPG, CBCT, MG, US)
   - series thumbnails sidebar
   - window/level (drag), zoom (drag or wheel), pan, invert
   - window presets (soft tissue / lung / bone)
   - length measurement in mm (uses PixelSpacing)
   - slice slider + keyboard navigation (← →), DICOM corner overlays
-- **Synthetic demo data**: seeder generates realistic CT chest (with a lung lesion),
-  MR brain (with a tumor), and CR chest studies — no PHI, safe for demos.
+  - cine playback (play/pause + frame scrubbing) for multi-frame studies such as
+    ultrasound loops
+- **Synthetic demo data**: seeder generates studies across 8 modalities —
+  CT chest (with a lung lesion), MR brain (with a tumor), CR and DX chest X-rays
+  (PA + lateral), dental OPG panoramic, dental CBCT volume, mammography (RCC/LCC
+  with mass and microcalcifications), and a multi-frame ultrasound cine loop —
+  no PHI, safe for demos.
 
 ## Quick start
 

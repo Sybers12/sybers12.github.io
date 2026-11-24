@@ -8,26 +8,38 @@
 </head>
 <body>
   <header id="topbar">
-    <div class="brand"><span class="logo">◉</span> OpenPACS</div>
+    <div class="brand"><span class="logo">◉</span> Open<span>PACS</span></div>
     <nav>
       <button id="navWorklist" class="navbtn active">Worklist</button>
       <button id="navViewer" class="navbtn" disabled>Viewer</button>
     </nav>
-    <div class="conn" id="connBadge">● connected</div>
+    <div class="conn" id="connBadge">● online</div>
   </header>
 
   <main id="worklistView">
     <section class="filters">
-      <input id="fPatient" type="text" placeholder="Patient name or ID" />
-      <input id="fModality" type="text" placeholder="Modality (CT, MR, CR…)" />
-      <input id="fDateFrom" type="date" title="From date" />
-      <input id="fDateTo" type="date" title="To date" />
-      <button id="btnSearch" class="primary">Search</button>
-      <button id="btnReset">Reset</button>
-      <label class="upload">
-        Upload DICOM
-        <input id="fileUpload" type="file" accept=".dcm,application/dicom" multiple hidden />
-      </label>
+      <div class="filter-row">
+        <input id="fPatient" type="text" placeholder="🔍 Patient name or ID" />
+        <input id="fDateFrom" type="date" title="From date" />
+        <input id="fDateTo" type="date" title="To date" />
+        <button id="btnSearch" class="primary">Search</button>
+        <button id="btnReset">Reset</button>
+        <label class="upload">
+          ⬆ Upload DICOM
+          <input id="fileUpload" type="file" accept=".dcm,application/dicom" multiple hidden />
+        </label>
+      </div>
+      <div class="chips" id="modalityChips">
+        <button class="chip active" data-modality="">All</button>
+        <button class="chip" data-modality="CT">CT</button>
+        <button class="chip" data-modality="MR">MR</button>
+        <button class="chip" data-modality="CR">CR</button>
+        <button class="chip" data-modality="DX">DX</button>
+        <button class="chip" data-modality="OPG">OPG</button>
+        <button class="chip" data-modality="CBCT">CBCT</button>
+        <button class="chip" data-modality="MG">MG</button>
+        <button class="chip" data-modality="US">US</button>
+      </div>
     </section>
     <section class="tablewrap">
       <table id="studyTable">
@@ -56,6 +68,11 @@
         <div id="cornerTR" class="corner right"></div>
         <div id="cornerBL" class="corner"></div>
         <div id="cornerBR" class="corner right"></div>
+      </div>
+      <div id="cineBar" class="hidden">
+        <button id="btnPlay" class="tool" title="Play cine loop">▶ Play</button>
+        <input id="frameSlider" type="range" min="1" max="1" value="1" />
+        <span id="frameLabel" class="slice-label">1/1</span>
       </div>
       <div id="toolbar">
         <button data-tool="wl" class="tool active" title="Window/Level (drag)">W/L</button>
